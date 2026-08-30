@@ -1,6 +1,5 @@
 package io.github.pgatzka.organizer.core;
 
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,12 +20,15 @@ public final class Versions {
 
         /** Parses a {@code -Dbump} value, case-insensitively. */
         public static Segment parse(String text) {
-            try {
-                return valueOf(text.trim().toUpperCase(Locale.ROOT));
-            } catch (IllegalArgumentException | NullPointerException e) {
-                throw new IllegalArgumentException(
-                        "Unknown segment '" + text + "'. Choose one of major, minor or patch.");
+            if (text != null) {
+                for (Segment segment : values()) {
+                    if (segment.name().equalsIgnoreCase(text.trim())) {
+                        return segment;
+                    }
+                }
             }
+            throw new IllegalArgumentException(
+                    "Unknown segment '" + text + "'. Choose one of major, minor or patch.");
         }
     }
 
@@ -81,6 +83,7 @@ public final class Versions {
                 patch = 0;
             }
             case PATCH -> patch++;
+            default -> throw new IllegalStateException("Unhandled segment " + segment);
         }
 
         String bumped = major + "." + minor + "." + patch + qualifier;

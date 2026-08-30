@@ -15,7 +15,8 @@ class ConsolePrompterTest {
     private final ByteArrayOutputStream output = new ByteArrayOutputStream();
 
     private ConsolePrompter prompter(String input) {
-        return new ConsolePrompter(new StringReader(input), new PrintStream(output, true, StandardCharsets.UTF_8), true);
+        return new ConsolePrompter(
+                new StringReader(input), new PrintStream(output, true, StandardCharsets.UTF_8), true);
     }
 
     private String written() {

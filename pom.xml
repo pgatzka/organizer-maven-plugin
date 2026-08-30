@@ -41,6 +41,18 @@
     <assertjVersion>3.26.3</assertjVersion>
     <mockitoVersion>5.14.2</mockitoVersion>
     <jacocoVersion>0.8.12</jacocoVersion>
+    <spotbugsVersion>4.8.6.6</spotbugsVersion>
+    <checkstyleVersion>3.6.0</checkstyleVersion>
+    <invokerVersion>3.8.1</invokerVersion>
+    <gpgVersion>3.2.7</gpgVersion>
+    <sourcePluginVersion>3.3.1</sourcePluginVersion>
+    <javadocPluginVersion>3.11.2</javadocPluginVersion>
+    <centralPublishingVersion>0.7.0</centralPublishingVersion>
+    <groovyVersion>4.0.24</groovyVersion>
+
+    <!-- The floor the build enforces; the suite normally sits comfortably above it. -->
+    <coverage.instruction.minimum>0.90</coverage.instruction.minimum>
+    <coverage.branch.minimum>0.80</coverage.branch.minimum>
   </properties>
 
   <dependencies>
@@ -162,8 +174,182 @@
               <goal>report</goal>
             </goals>
           </execution>
+          <execution>
+            <id>check-coverage</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit>
+                      <counter>INSTRUCTION</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>${coverage.instruction.minimum}</minimum>
+                    </limit>
+                    <limit>
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>${coverage.branch.minimum}</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!-- Everything Maven Central requires of a published artifact: sources, javadoc, signatures. -->
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>${sourcePluginVersion}</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>${javadocPluginVersion}</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>${gpgVersion}</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>${centralPublishingVersion}</version>
+            <extensions>true</extensions>
+            <configuration>
+              <publishingServerId>central</publishingServerId>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!--
+      Integration tests: each project under src/it is built by a real Maven, with this plugin
+      installed into a local repository first, and checked by its own verify.groovy.
+    -->
+    <profile>
+      <id>run-its</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-invoker-plugin</artifactId>
+            <version>${invokerVersion}</version>
+            <configuration>
+              <projectsDirectory>src/it</projectsDirectory>
+              <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
+              <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
+              <postBuildHookScript>verify</postBuildHookScript>
+              <settingsFile>src/it/settings.xml</settingsFile>
+              <streamLogs>false</streamLogs>
+              <showErrors>true</showErrors>
+            </configuration>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.groovy</groupId>
+                <artifactId>groovy</artifactId>
+                <version>${groovyVersion}</version>
+              </dependency>
+            </dependencies>
+            <executions>
+              <execution>
+                <id>integration-test</id>
+                <goals>
+                  <goal>install</goal>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!-- Static analysis. Kept out of the default build so a plain `mvn verify` stays quick. -->
+    <profile>
+      <id>quality</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-maven-plugin</artifactId>
+            <version>${spotbugsVersion}</version>
+            <configuration>
+              <effort>Max</effort>
+              <threshold>Medium</threshold>
+              <excludeFilterFile>config/spotbugs-exclude.xml</excludeFilterFile>
+              <includeTests>false</includeTests>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <version>${checkstyleVersion}</version>
+            <configuration>
+              <configLocation>config/checkstyle.xml</configLocation>
+              <includeTestSourceDirectory>true</includeTestSourceDirectory>
+              <consoleOutput>true</consoleOutput>
+              <violationSeverity>error</violationSeverity>
+              <failOnViolation>true</failOnViolation>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

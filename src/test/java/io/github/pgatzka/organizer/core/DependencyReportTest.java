@@ -66,7 +66,10 @@ class DependencyReportTest {
     @Test
     void groupsTheTreeByScope() {
         List<String> lines = DependencyReport.render(
-                List.of(entry("a:b:1", "compile", false), entry("c:d:2", "compile", false), entry("e:f:3", "test", false)),
+                List.of(
+                        entry("a:b:1", "compile", false),
+                        entry("c:d:2", "compile", false),
+                        entry("e:f:3", "test", false)),
                 Format.TREE);
 
         assertThat(lines).containsExactly("compile", "+- a:b:1", "\\- c:d:2", "test", "\\- e:f:3");

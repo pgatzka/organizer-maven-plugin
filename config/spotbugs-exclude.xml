@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+  <!--
+    Mojo parameters are written by Maven's field injection, which SpotBugs cannot see, so it
+    reports them as never written and as mutable state handed in from outside. Both are how a
+    Maven plugin is built.
+  -->
+  <Match>
+    <Package name="io.github.pgatzka.organizer.mojo"/>
+    <Bug pattern="UWF_UNWRITTEN_FIELD,UWF_NULL_FIELD,NP_UNWRITTEN_FIELD,EI_EXPOSE_REP,EI_EXPOSE_REP2,URF_UNREAD_FIELD"/>
+  </Match>
+  <!-- The core classes hand out JDOM elements by design: callers are meant to edit the document. -->
+  <Match>
+    <Package name="io.github.pgatzka.organizer.core"/>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+  </Match>
+</FindBugsFilter>

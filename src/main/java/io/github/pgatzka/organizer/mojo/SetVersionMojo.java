@@ -66,7 +66,7 @@ public class SetVersionMojo extends AbstractPomWriteMojo {
             getLog().info("Version is already " + target);
         } else {
             Poms.setChildTextOrdered(root, "version", target, PomSchema.PROJECT, pom.getIndentUnit());
-            getLog().info("Set version to " + target + (current == null ? "" : " (was " + current + ")"));
+            getLog().info("Set version to " + target + " (was " + current + ")");
         }
 
         if (updateParent) {
@@ -157,7 +157,7 @@ public class SetVersionMojo extends AbstractPomWriteMojo {
             }
 
             Element parent = Poms.child(child.getRoot(), "parent");
-            if (parent != null && current != null && current.equals(Poms.childText(parent, "version"))) {
+            if (parent != null && current.equals(Poms.childText(parent, "version"))) {
                 Poms.setChildTextOrdered(parent, "version", target, PomSchema.PARENT, child.getIndentUnit());
                 getLog().info("Updated the parent version in " + childPom);
             }
@@ -168,8 +168,11 @@ public class SetVersionMojo extends AbstractPomWriteMojo {
     }
 
     /** The POM of every module listed, skipping the ones that are not there. */
-    private List<Path> modulePoms(PomDocument pom) {
+    private List<Path> modulePoms(PomDocument pom) throws MojoExecutionException {
         Path directory = pom.getPath().toAbsolutePath().getParent();
+        if (directory == null) {
+            throw new MojoExecutionException(pom.getPath() + " has no parent directory to resolve modules against.");
+        }
         List<Path> poms = new ArrayList<>();
         for (Element module : Poms.children(Poms.child(pom.getRoot(), "modules"), "module")) {
             Path childPom = directory.resolve(module.getTextTrim()).resolve("pom.xml");

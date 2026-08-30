@@ -234,8 +234,13 @@ public final class PomDocument {
         return startTag + rendered.substring(end);
     }
 
+    /**
+     * Normalizes a start tag for comparison: runs of whitespace become one space, and the optional
+     * space a serializer puts before {@code />} is dropped, so {@code <project/>} and
+     * {@code <project />} count as the same tag.
+     */
     private static String collapseWhitespace(String text) {
-        return text.replaceAll("\\s+", " ");
+        return text.replaceAll("\\s+", " ").replaceAll("\\s+/>$", "/>");
     }
 
     /** Whether {@link #render()} would produce something other than the original text. */

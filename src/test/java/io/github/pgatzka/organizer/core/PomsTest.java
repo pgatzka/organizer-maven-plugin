@@ -167,7 +167,8 @@ class PomsTest {
 
     @Test
     void insertsBeforeAReferenceElement() {
-        PomDocument pom = parse("<project>\n  <modules>\n    <module>b</module>\n  </modules>\n</project>");
+        PomDocument pom =
+                parse("<project>\n  <modules>\n    <module>b</module>\n  </modules>\n</project>");
         Element modules = Poms.child(pom.getRoot(), "modules");
         Element reference = Poms.children(modules, "module").get(0);
 
@@ -191,7 +192,8 @@ class PomsTest {
     @Test
     void insertsIntoASortedSectionInOrder() {
         PomDocument pom = parse(
-                "<project>\n  <modules>\n    <module>alpha</module>\n    <module>gamma</module>\n  </modules>\n</project>");
+                "<project>\n  <modules>\n    <module>alpha</module>\n"
+                        + "    <module>gamma</module>\n  </modules>\n</project>");
         Element modules = Poms.child(pom.getRoot(), "modules");
 
         Poms.insertSorted(
@@ -207,7 +209,8 @@ class PomsTest {
 
     @Test
     void appendsToASortedSectionWhenTheNewEntrySortsLast() {
-        PomDocument pom = parse("<project>\n  <modules>\n    <module>alpha</module>\n  </modules>\n</project>");
+        PomDocument pom =
+                parse("<project>\n  <modules>\n    <module>alpha</module>\n  </modules>\n</project>");
         Element modules = Poms.child(pom.getRoot(), "modules");
 
         Poms.insertSorted(
@@ -223,7 +226,8 @@ class PomsTest {
     @Test
     void doesNotReorderAHandSortedSection() {
         PomDocument pom = parse(
-                "<project>\n  <modules>\n    <module>zeta</module>\n    <module>alpha</module>\n  </modules>\n</project>");
+                "<project>\n  <modules>\n    <module>zeta</module>\n"
+                        + "    <module>alpha</module>\n  </modules>\n</project>");
         Element modules = Poms.child(pom.getRoot(), "modules");
 
         Poms.insertSorted(

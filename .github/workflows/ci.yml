@@ -1,0 +1,190 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MAVEN_ARGS: -B -ntp -Dstyle.color=never
+
+jobs:
+  build:
+    name: Build and plugin descriptor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: maven
+      - name: Compile and generate the plugin descriptor
+        run: mvn $MAVEN_ARGS clean process-classes
+      - name: Every goal must document its parameters
+        run: |
+          descriptor=target/classes/META-INF/maven/plugin.xml
+          test -f "$descriptor" || { echo "No plugin descriptor was generated"; exit 1; }
+          goals=$(grep -c '<mojo>' "$descriptor")
+          echo "The plugin declares $goals goals."
+          test "$goals" -gt 0 || { echo "The descriptor declares no goals"; exit 1; }
+          if grep -q '<description></description>' "$descriptor"; then
+            echo "Some goal or parameter has an empty description:"
+            grep -B 4 '<description></description>' "$descriptor"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plugin-descriptor
+          path: target/classes/META-INF/maven/plugin.xml
+
+  test:
+    name: Tests (JDK ${{ matrix.java }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ["17", "21", "25"]
+        os: [ubuntu-latest]
+        include:
+          - java: "21"
+            os: windows-latest
+          - java: "21"
+            os: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+          cache: maven
+      - name: Run the unit tests
+        run: mvn $MAVEN_ARGS test
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: surefire-reports-${{ matrix.os }}-${{ matrix.java }}
+          path: target/surefire-reports/
+
+  coverage:
+    name: Coverage gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: maven
+      - name: Run the tests and enforce the coverage floor
+        run: mvn $MAVEN_ARGS verify
+      - name: Summarise the coverage
+        if: always()
+        run: |
+          report=target/site/jacoco/jacoco.xml
+          test -f "$report" || exit 0
+          python3 - "$report" >> "$GITHUB_STEP_SUMMARY" <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          root = ET.parse(sys.argv[1]).getroot()
+          print("| Metric | Covered | Total | Percentage |")
+          print("| --- | ---: | ---: | ---: |")
+          for counter in root.findall("counter"):
+              covered = int(counter.get("covered"))
+              total = covered + int(counter.get("missed"))
+              name = counter.get("type").capitalize()
+              print(f"| {name} | {covered} | {total} | {100 * covered / total:.1f}% |")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: target/site/jacoco/
+
+  integration-test:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: maven
+      - name: Run the goals against real projects
+        run: mvn $MAVEN_ARGS verify -Prun-its -DskipTests
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: invoker-reports
+          path: |
+            target/invoker-reports/
+            target/it/*/build.log
+
+  static-analysis:
+    name: SpotBugs and Checkstyle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: maven
+      - name: Run the static analysis
+        run: mvn $MAVEN_ARGS verify -Pquality -DskipTests
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: static-analysis-reports
+          path: |
+            target/spotbugsXml.xml
+            target/checkstyle-result.xml
+
+  docs:
+    name: Docs cover every goal
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: maven
+      - name: Generate the plugin descriptor
+        run: mvn $MAVEN_ARGS process-classes
+      - name: Every goal must appear in the guides
+        run: ./.github/scripts/check-docs.sh
+
+  dependency-review:
+    name: Dependency review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: maven
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: java
+      - run: mvn $MAVEN_ARGS clean compile
+      - uses: github/codeql-action/analyze@v3

@@ -111,6 +111,69 @@ class PomDocumentTest {
     }
 
     @Test
+    void roundTripsAnEmptyDocumentElement() {
+        assertThat(PomDocument.parse("<project/>\n", null).render()).isEqualTo("<project/>\n");
+        assertThat(PomDocument.parse("<project />\n", null).render()).isEqualTo("<project />\n");
+    }
+
+    @Test
+    void fallsBackToUtf8ForAnUnknownEncoding() {
+        String original = "<?xml version=\"1.0\" encoding=\"NOT-A-CHARSET\"?>\n<project/>\n";
+
+        PomDocument pom = PomDocument.parse(original, null);
+
+        assertThat(pom.getCharset()).isEqualTo(StandardCharsets.UTF_8);
+        assertThat(pom.render()).isEqualTo(original);
+    }
+
+    @Test
+    void fallsBackToUtf8ForADeclarationWithoutAnEncoding() {
+        assertThat(PomDocument.parse("<?xml version=\"1.0\"?>\n<project/>\n", null).getCharset())
+                .isEqualTo(StandardCharsets.UTF_8);
+    }
+
+    @Test
+    void fallsBackToUtf8WithoutADeclaration() {
+        assertThat(PomDocument.parse("<project/>\n", null).getCharset()).isEqualTo(StandardCharsets.UTF_8);
+    }
+
+    @Test
+    void readsAByteOrderMarkFromDisk(@TempDir Path dir) throws IOException {
+        String original = "\uFEFF<project/>\n";
+        Path path = dir.resolve("pom.xml");
+        Files.write(path, original.getBytes(StandardCharsets.UTF_8));
+
+        PomDocument pom = PomDocument.load(path);
+        pom.write();
+
+        assertThat(Files.readAllBytes(path)).isEqualTo(original.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void exposesThePathItWasLoadedFrom(@TempDir Path dir) throws IOException {
+        Path path = Fixtures.copyTo(dir, "minimal.xml");
+
+        assertThat(PomDocument.load(path).getPath()).isEqualTo(path);
+    }
+
+    @Test
+    void writesToAnotherLocation(@TempDir Path dir) throws IOException {
+        PomDocument pom = PomDocument.parse(Fixtures.text("minimal.xml"), null);
+        Path elsewhere = dir.resolve("copy.xml");
+
+        pom.write(elsewhere);
+
+        assertThat(Fixtures.read(elsewhere)).isEqualTo(Fixtures.text("minimal.xml"));
+    }
+
+    @Test
+    void handlesADocumentWithADoctype() {
+        String original = "<!DOCTYPE project>\n<project>\n  <name>x</name>\n</project>\n";
+
+        assertThat(PomDocument.parse(original, null).render()).isEqualTo(original);
+    }
+
+    @Test
     void rejectsMalformedXml() {
         assertThatThrownBy(() -> PomDocument.parse("<project><oops></project>", null))
                 .isInstanceOf(IllegalArgumentException.class)

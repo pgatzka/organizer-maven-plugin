@@ -87,7 +87,7 @@ public class RemoveModuleMojo extends AbstractPomWriteMojo {
     }
 
     private void deleteDirectory(String name) throws MojoExecutionException {
-        Path directory = pomFile.toPath().toAbsolutePath().getParent().resolve(name);
+        Path directory = pomDirectory().resolve(name);
         if (!Files.isDirectory(directory)) {
             getLog().info("No directory at " + directory + " to delete");
             return;

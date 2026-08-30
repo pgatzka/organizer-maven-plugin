@@ -85,7 +85,7 @@ public class AddModuleMojo extends AbstractPomWriteMojo {
 
     /** Writes a minimal child POM, unless the directory already has one. */
     private void scaffold(PomDocument pom, String name) throws MojoExecutionException {
-        Path directory = pomFile.toPath().toAbsolutePath().getParent().resolve(name);
+        Path directory = pomDirectory().resolve(name);
         Path childPom = directory.resolve("pom.xml");
         if (Files.exists(childPom)) {
             getLog().info("Leaving the existing POM in " + name + " alone");

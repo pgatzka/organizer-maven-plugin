@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.List;
 import io.github.pgatzka.organizer.core.VersionResolver;
 import org.apache.maven.execution.MavenSession;
@@ -87,6 +88,15 @@ public abstract class AbstractPomMojo extends AbstractMojo {
         } catch (RuntimeException e) {
             throw new MojoExecutionException("Cannot parse " + pomFile + ": " + e.getMessage(), e);
         }
+    }
+
+    /** The directory the POM lives in, which module paths are resolved against. */
+    Path pomDirectory() throws MojoExecutionException {
+        Path parent = pomFile.toPath().toAbsolutePath().getParent();
+        if (parent == null) {
+            throw new MojoExecutionException(pomFile + " has no parent directory to resolve modules against.");
+        }
+        return parent;
     }
 
     /**

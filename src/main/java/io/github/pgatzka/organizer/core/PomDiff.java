@@ -26,8 +26,16 @@ public final class PomDiff {
 
     /** The unified diff of a POM against its on-disk state. */
     public static List<String> of(PomDocument pom) {
-        String name = pom.getPath() == null ? "pom.xml" : pom.getPath().getFileName().toString();
-        return unified(pom.getOriginalText(), pom.render(), name);
+        return unified(pom.getOriginalText(), pom.render(), fileName(pom));
+    }
+
+    /** The name to put in the diff header; not every path has a file name. */
+    private static String fileName(PomDocument pom) {
+        if (pom.getPath() == null) {
+            return "pom.xml";
+        }
+        java.nio.file.Path name = pom.getPath().getFileName();
+        return name == null ? "pom.xml" : name.toString();
     }
 
     private static List<String> lines(String text) {

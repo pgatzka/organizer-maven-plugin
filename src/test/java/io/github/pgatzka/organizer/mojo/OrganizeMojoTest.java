@@ -214,7 +214,8 @@ class OrganizeMojoTest extends MojoTest {
         mojo.execute();
 
         assertThat(content())
-                .containsSubsequence("<id>ci</id>", "<dependencies>", "<groupId>g</groupId>", "<artifactId>a</artifactId>");
+                .containsSubsequence(
+                        "<id>ci</id>", "<dependencies>", "<groupId>g</groupId>", "<artifactId>a</artifactId>");
     }
 
     @Test

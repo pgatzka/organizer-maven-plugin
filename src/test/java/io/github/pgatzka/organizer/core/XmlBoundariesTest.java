@@ -70,6 +70,56 @@ class XmlBoundariesTest {
     }
 
     @Test
+    void rejectsAnUnterminatedComment() {
+        assertThatThrownBy(() -> XmlBoundaries.of("<!-- never closed\n<project/>"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void rejectsAnUnterminatedDeclaration() {
+        assertThatThrownBy(() -> XmlBoundaries.of("<?xml version=\"1.0\"\n<project/>"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void rejectsAnUnterminatedDoctype() {
+        assertThatThrownBy(() -> XmlBoundaries.of("<!DOCTYPE project [ unclosed"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void rejectsAnUnterminatedStartTag() {
+        assertThatThrownBy(() -> XmlBoundaries.of("<project attr=\"1\""))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void handlesSingleQuotedAttributeValues() {
+        String xml = "<project title='a > b'><a/></project>";
+
+        assertThat(XmlBoundaries.of(xml).end()).isEqualTo(xml.length());
+    }
+
+    @Test
+    void handlesACommentAndPiInsideTheDocument() {
+        String xml = "<project><?php ?><!-- note --><a/></project>tail";
+
+        assertThat(xml.substring(XmlBoundaries.of(xml).end())).isEqualTo("tail");
+    }
+
+    @Test
+    void handlesADoctypeInsideTheDocumentContent() {
+        String xml = "<project><a/></project>";
+
+        assertThat(XmlBoundaries.of(xml).end()).isEqualTo(xml.length());
+    }
+
+    @Test
+    void reportsMinusOneForAnUnterminatedTag() {
+        assertThat(XmlBoundaries.endOfTag("<project", 0)).isEqualTo(-1);
+    }
+
+    @Test
     void rejectsInputWithoutADocumentElement() {
         assertThatThrownBy(() -> XmlBoundaries.of("<?xml version=\"1.0\"?>\n"))
                 .isInstanceOf(IllegalArgumentException.class)

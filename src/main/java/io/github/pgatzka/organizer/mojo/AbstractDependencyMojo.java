@@ -34,7 +34,10 @@ abstract class AbstractDependencyMojo extends AbstractPomWriteMojo {
     @Parameter(property = "version")
     String version;
 
-    /** The dependency scope: {@code compile}, {@code provided}, {@code runtime}, {@code test}, {@code system} or {@code import}. */
+    /**
+     * The dependency scope: {@code compile}, {@code provided}, {@code runtime}, {@code test},
+     * {@code system} or {@code import}.
+     */
     @Parameter(property = "scope")
     String scope;
 
