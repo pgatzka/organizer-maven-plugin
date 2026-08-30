@@ -38,7 +38,7 @@ jobs:
             grep -B 4 '<description></description>' "$descriptor"
             exit 1
           fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: plugin-descriptor
           path: target/classes/META-INF/maven/plugin.xml
@@ -66,7 +66,7 @@ jobs:
       - name: Run the unit tests
         run: mvn $MAVEN_ARGS test
         shell: bash
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: surefire-reports-${{ matrix.os }}-${{ matrix.java }}
@@ -100,7 +100,7 @@ jobs:
               name = counter.get("type").capitalize()
               print(f"| {name} | {covered} | {total} | {100 * covered / total:.1f}% |")
           PY
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage-report
@@ -118,7 +118,7 @@ jobs:
           cache: maven
       - name: Run the goals against real projects
         run: mvn $MAVEN_ARGS verify -Prun-its -DskipTests
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: invoker-reports
@@ -138,7 +138,7 @@ jobs:
           cache: maven
       - name: Run the static analysis
         run: mvn $MAVEN_ARGS verify -Pquality -DskipTests
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: static-analysis-reports
