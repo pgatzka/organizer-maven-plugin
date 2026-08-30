@@ -41,7 +41,7 @@
     <assertjVersion>3.26.3</assertjVersion>
     <mockitoVersion>5.14.2</mockitoVersion>
     <jacocoVersion>0.8.12</jacocoVersion>
-    <spotbugsVersion>4.8.6.6</spotbugsVersion>
+    <spotbugsVersion>4.10.4.0</spotbugsVersion>
     <checkstyleVersion>3.6.0</checkstyleVersion>
     <invokerVersion>3.8.1</invokerVersion>
     <gpgVersion>3.2.7</gpgVersion>
