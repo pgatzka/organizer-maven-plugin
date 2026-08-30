@@ -186,6 +186,55 @@ public final class Poms {
     }
 
     /**
+     * Sets the text of a named child, creating it in its canonical position when absent.
+     *
+     * <p>{@code order} lists the element names in the order the POM schema expects them, so a
+     * {@code <version>} added to an existing dependency lands after {@code <artifactId>} rather
+     * than at the end.
+     */
+    public static void setChildTextOrdered(
+            Element parent, String name, String text, List<String> order, String indentUnit) {
+        Element existing = child(parent, name);
+        if (existing != null) {
+            existing.setText(text);
+            return;
+        }
+        setChildOrdered(parent, element(parent, name, text), order, indentUnit);
+    }
+
+    /**
+     * Replaces (or adds) a whole child element, putting it in the position {@code order} gives it.
+     */
+    public static void setChildOrdered(
+            Element parent, Element child, List<String> order, String indentUnit) {
+        Element existing = child(parent, child.getName());
+        if (existing != null) {
+            remove(parent, existing);
+        }
+        Element successor = firstChildAfter(parent, child.getName(), order);
+        if (successor == null) {
+            append(parent, child, indentUnit);
+        } else {
+            insertBefore(parent, child, successor, indentUnit);
+        }
+    }
+
+    /** The first element child of {@code parent} that sorts after {@code name} in {@code order}. */
+    private static Element firstChildAfter(Element parent, String name, List<String> order) {
+        int position = order.indexOf(name);
+        if (position < 0) {
+            return null;
+        }
+        for (Element candidate : parent.getChildren()) {
+            int candidatePosition = order.indexOf(candidate.getName());
+            if (candidatePosition > position) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Removes {@code child} from {@code parent} together with the whitespace that indented it, so
      * no blank line is left behind.
      */
