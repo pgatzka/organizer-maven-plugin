@@ -36,7 +36,7 @@
     <mavenResolverVersion>1.9.22</mavenResolverVersion>
     <mavenPluginToolsVersion>3.15.1</mavenPluginToolsVersion>
     <jdom2Version>2.0.6.1</jdom2Version>
-    <javaDiffUtilsVersion>4.12</javaDiffUtilsVersion>
+    <javaDiffUtilsVersion>4.17</javaDiffUtilsVersion>
     <junitVersion>5.11.4</junitVersion>
     <assertjVersion>3.26.3</assertjVersion>
     <mockitoVersion>5.14.2</mockitoVersion>
