@@ -32,7 +32,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.release>17</maven.compiler.release>
 
-    <mavenVersion>3.9.9</mavenVersion>
+    <mavenVersion>3.9.16</mavenVersion>
     <mavenResolverVersion>1.9.22</mavenResolverVersion>
     <mavenPluginToolsVersion>3.15.1</mavenPluginToolsVersion>
     <jdom2Version>2.0.6.1</jdom2Version>
