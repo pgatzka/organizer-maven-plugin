@@ -1,0 +1,6 @@
+target/
+*.bak
+.idea/
+*.iml
+.vscode/
+.flattened-pom.xml
