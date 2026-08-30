@@ -216,13 +216,14 @@ class AddDependencyMojoTest extends MojoTest {
     @Test
     void asksForTheCoordinateWhenNothingWasPassed() throws Exception {
         pom("sample.xml");
-        ScriptedPrompter prompter = new ScriptedPrompter("com.acme", "widget");
+        ScriptedPrompter prompter = new ScriptedPrompter("com.acme", "widget", "1");
         AddDependencyMojo mojo = configure(new AddDependencyMojo(), prompter);
         mojo.version = "1.0.0";
 
         mojo.execute();
 
-        assertThat(prompter.questions()).containsExactly("groupId", "artifactId");
+        assertThat(prompter.questions()).element(0).isEqualTo("groupId");
+        assertThat(prompter.questions()).element(1).isEqualTo("artifactId");
         assertThat(content()).contains("<artifactId>widget</artifactId>");
     }
 

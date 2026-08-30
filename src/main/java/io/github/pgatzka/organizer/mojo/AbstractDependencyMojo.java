@@ -68,6 +68,14 @@ abstract class AbstractDependencyMojo extends AbstractPomWriteMojo {
     @Parameter(property = "allowSnapshots", defaultValue = "false")
     boolean allowSnapshots;
 
+    /** Whether the coordinate had to be asked for, which starts the guided flow. */
+    private boolean prompted;
+
+    /** Whether this run asked the user for the coordinate rather than reading it from parameters. */
+    boolean wasPrompted() {
+        return prompted;
+    }
+
     /**
      * The coordinate the goal should act on, taken from {@code -Dartifact} or from the individual
      * parameters, and asked for interactively when neither was given.
@@ -76,6 +84,7 @@ abstract class AbstractDependencyMojo extends AbstractPomWriteMojo {
         Coordinate parsed = artifact != null && !artifact.isBlank() ? Coordinate.parse(artifact) : null;
 
         String group = firstNonBlank(groupId, parsed == null ? null : parsed.getGroupId());
+        prompted = group == null || group.isBlank();
         group = require(group, "groupId", "groupId", null);
 
         String artifactName = firstNonBlank(artifactId, parsed == null ? null : parsed.getArtifactId());
