@@ -165,7 +165,7 @@ class RemoveDependencyMojoTest extends MojoTest {
 
         assertThatThrownBy(mojo::execute)
                 .isInstanceOf(MojoFailureException.class)
-                .hasMessageContaining("declares no dependencies");
+                .hasMessageContaining("declares no dependency entries");
     }
 
     @Test
@@ -177,6 +177,7 @@ class RemoveDependencyMojoTest extends MojoTest {
         mojo.execute();
 
         assertThat(prompter.questions().get(0))
+                .contains("Which dependency should be removed?")
                 .contains("org.apache.commons:commons-lang3:3.14.0")
                 .contains("org.junit.jupiter:junit-jupiter:5.11.4 (test)");
         assertThat(content()).doesNotContain("junit-jupiter").contains("commons-lang3");
@@ -192,7 +193,7 @@ class RemoveDependencyMojoTest extends MojoTest {
 
         mojo.execute();
 
-        assertThat(prompter.questions()).containsExactly("Remove 1 dependency entry?");
+        assertThat(prompter.questions()).containsExactly("Remove 1 dependency?");
         assertThat(content()).isEqualTo(before);
     }
 

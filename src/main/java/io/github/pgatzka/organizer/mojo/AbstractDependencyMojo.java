@@ -7,9 +7,11 @@ import io.github.pgatzka.organizer.core.PomDocument;
 import io.github.pgatzka.organizer.core.Poms;
 import java.util.List;
 import java.util.Optional;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.jdom2.Element;
 
 /** Shared parameters and coordinate handling for the dependency goals. */
@@ -50,6 +52,9 @@ abstract class AbstractDependencyMojo extends AbstractPomWriteMojo {
     /** Exclusions, as {@code groupId:artifactId,groupId:artifactId}. */
     @Parameter(property = "exclusions")
     String exclusions;
+
+    @Parameter(defaultValue = "${project}", readonly = true)
+    MavenProject project;
 
     /**
      * The coordinate the goal should act on, taken from {@code -Dartifact} or from the individual
@@ -95,6 +100,12 @@ abstract class AbstractDependencyMojo extends AbstractPomWriteMojo {
                     + "leaving <version> out of the new entry");
             return coordinate;
         }
+        Optional<String> inherited = effectiveManagedVersion(coordinate);
+        if (inherited.isPresent()) {
+            getLog().info("Version " + inherited.get() + " is managed by a parent POM or an imported BOM; "
+                    + "leaving <version> out of the new entry");
+            return coordinate;
+        }
         Optional<String> resolved = resolveVersionExternally(pom, coordinate);
         if (resolved.isPresent()) {
             return coordinate.withVersion(resolved.get());
@@ -103,6 +114,33 @@ abstract class AbstractDependencyMojo extends AbstractPomWriteMojo {
                 "No version given for " + coordinate.toGA() + " and none is managed by this POM. "
                         + "Pass -Dversion=<version>, add a managed entry with organizer:add-managed-dependency, "
                         + "or import a BOM with organizer:import-bom.");
+    }
+
+    /**
+     * Looks the coordinate up in the effective model's {@code dependencyManagement}, which Maven has
+     * already flattened across parent POMs and imported BOMs.
+     *
+     * <p>Only consulted when the goal is editing the POM of the project Maven itself loaded;
+     * pointing {@code -Dorganizer.pom} at some other file makes that project's inheritance
+     * irrelevant.
+     */
+    Optional<String> effectiveManagedVersion(Coordinate coordinate) {
+        if (project == null || project.getFile() == null || pomFile == null) {
+            return Optional.empty();
+        }
+        if (!project.getFile().getAbsoluteFile().equals(pomFile.getAbsoluteFile())) {
+            return Optional.empty();
+        }
+        if (project.getDependencyManagement() == null) {
+            return Optional.empty();
+        }
+        for (Dependency managed : project.getDependencyManagement().getDependencies()) {
+            if (coordinate.matchesGA(managed.getGroupId(), managed.getArtifactId())
+                    && managed.getVersion() != null) {
+                return Optional.of(managed.getVersion());
+            }
+        }
+        return Optional.empty();
     }
 
     /**
