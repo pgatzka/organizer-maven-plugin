@@ -34,7 +34,7 @@
 
     <mavenVersion>3.9.9</mavenVersion>
     <mavenResolverVersion>1.9.22</mavenResolverVersion>
-    <mavenPluginToolsVersion>3.15.1</mavenPluginToolsVersion>
+    <mavenPluginToolsVersion>3.15.2</mavenPluginToolsVersion>
     <jdom2Version>2.0.6.1</jdom2Version>
     <javaDiffUtilsVersion>4.12</javaDiffUtilsVersion>
     <junitVersion>5.11.4</junitVersion>
@@ -43,10 +43,10 @@
     <jacocoVersion>0.8.12</jacocoVersion>
     <spotbugsVersion>4.8.6.6</spotbugsVersion>
     <checkstyleVersion>3.6.0</checkstyleVersion>
-    <invokerVersion>3.8.1</invokerVersion>
-    <gpgVersion>3.2.7</gpgVersion>
-    <sourcePluginVersion>3.3.1</sourcePluginVersion>
-    <javadocPluginVersion>3.11.2</javadocPluginVersion>
+    <invokerVersion>3.10.1</invokerVersion>
+    <gpgVersion>3.2.8</gpgVersion>
+    <sourcePluginVersion>3.4.0</sourcePluginVersion>
+    <javadocPluginVersion>3.12.0</javadocPluginVersion>
     <centralPublishingVersion>0.7.0</centralPublishingVersion>
     <groovyVersion>4.0.24</groovyVersion>
 
@@ -133,17 +133,17 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.13.0</version>
+          <version>3.15.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.5.2</version>
+          <version>3.5.6</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.4.2</version>
+          <version>3.5.1</version>
         </plugin>
       </plugins>
     </pluginManagement>
