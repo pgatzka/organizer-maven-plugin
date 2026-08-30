@@ -93,6 +93,7 @@ public final class Poms {
      * document.
      */
     public static void append(Element parent, Element child, String indentUnit) {
+        requireAttached(parent);
         int depth = depthOf(parent) + 1;
         indentSubtree(child, depth, indentUnit);
         ensureClosingIndent(parent, indentUnit);
@@ -106,6 +107,7 @@ public final class Poms {
      * {@code reference} must be a child of {@code parent}.
      */
     public static void insertBefore(Element parent, Element child, Element reference, String indentUnit) {
+        requireAttached(parent);
         int index = parent.indexOf(reference);
         if (index < 0) {
             throw new IllegalArgumentException("Reference element is not a child of " + parent.getName());
@@ -285,6 +287,19 @@ public final class Poms {
     }
 
     // ---------------------------------------------------------------- indentation
+
+    /**
+     * Guards against indenting against a detached element, whose depth is unknowable and would come
+     * out as zero. Build detached subtrees with plain {@code addContent} and let {@link #append}
+     * lay them out on the way in.
+     */
+    private static void requireAttached(Element parent) {
+        if (parent.getParent() == null) {
+            throw new IllegalStateException(
+                    "Cannot indent inside <" + parent.getName() + ">: it is not part of a document yet. "
+                            + "Build the subtree with addContent and append it once.");
+        }
+    }
 
     /** Number of ancestors between {@code element} and the document element. */
     public static int depthOf(Element element) {

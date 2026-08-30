@@ -237,6 +237,28 @@ class PomsTest {
                 .contains("<module>zeta</module>\n    <module>alpha</module>\n    <module>beta</module>");
     }
 
+    @Test
+    void refusesToIndentInsideADetachedElement() {
+        PomDocument pom = sample();
+        Element detached = Poms.element(pom.getRoot(), "dependency");
+
+        assertThatThrownBy(() -> Poms.append(detached, Poms.element(pom.getRoot(), "groupId", "g"), "  "))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("not part of a document yet");
+    }
+
+    @Test
+    void refusesToInsertBeforeInsideADetachedElement() {
+        PomDocument pom = sample();
+        Element detached = Poms.element(pom.getRoot(), "dependency");
+        Element reference = Poms.element(pom.getRoot(), "groupId", "g");
+        detached.addContent(reference);
+
+        assertThatThrownBy(() -> Poms.insertBefore(
+                        detached, Poms.element(pom.getRoot(), "artifactId", "a"), reference, "  "))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
     // ---------------------------------------------------------------- creating
 
     @Test
