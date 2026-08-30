@@ -37,9 +37,9 @@
     <mavenPluginToolsVersion>3.15.1</mavenPluginToolsVersion>
     <jdom2Version>2.0.6.1</jdom2Version>
     <javaDiffUtilsVersion>4.12</javaDiffUtilsVersion>
-    <junitVersion>5.11.4</junitVersion>
-    <assertjVersion>3.26.3</assertjVersion>
-    <mockitoVersion>5.14.2</mockitoVersion>
+    <junitVersion>6.1.3</junitVersion>
+    <assertjVersion>3.27.7</assertjVersion>
+    <mockitoVersion>5.23.0</mockitoVersion>
     <jacocoVersion>0.8.12</jacocoVersion>
     <spotbugsVersion>4.8.6.6</spotbugsVersion>
     <checkstyleVersion>3.6.0</checkstyleVersion>
