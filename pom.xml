@@ -39,6 +39,7 @@
     <javaDiffUtilsVersion>4.12</javaDiffUtilsVersion>
     <junitVersion>5.11.4</junitVersion>
     <assertjVersion>3.26.3</assertjVersion>
+    <mockitoVersion>5.14.2</mockitoVersion>
     <jacocoVersion>0.8.12</jacocoVersion>
   </properties>
 
@@ -104,6 +105,12 @@
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
       <version>${assertjVersion}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockitoVersion}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

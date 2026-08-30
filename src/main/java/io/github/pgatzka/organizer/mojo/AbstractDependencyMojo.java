@@ -5,6 +5,7 @@ import io.github.pgatzka.organizer.core.Dependencies;
 import io.github.pgatzka.organizer.core.DependencyOptions;
 import io.github.pgatzka.organizer.core.PomDocument;
 import io.github.pgatzka.organizer.core.Poms;
+import io.github.pgatzka.organizer.core.VersionResolver;
 import java.util.List;
 import java.util.Optional;
 import org.apache.maven.model.Dependency;
@@ -55,6 +56,17 @@ abstract class AbstractDependencyMojo extends AbstractPomWriteMojo {
 
     @Parameter(defaultValue = "${project}", readonly = true)
     MavenProject project;
+
+    /**
+     * Look the newest release version up in the remote repositories when no version was given and
+     * none is managed.
+     */
+    @Parameter(property = "organizer.resolveLatest", defaultValue = "true")
+    boolean resolveLatest = true;
+
+    /** Consider {@code -SNAPSHOT} versions when resolving the newest one. */
+    @Parameter(property = "allowSnapshots", defaultValue = "false")
+    boolean allowSnapshots;
 
     /**
      * The coordinate the goal should act on, taken from {@code -Dartifact} or from the individual
@@ -144,12 +156,34 @@ abstract class AbstractDependencyMojo extends AbstractPomWriteMojo {
     }
 
     /**
-     * Hook for the goals that can look a version up outside the POM. The base implementation knows
-     * nothing beyond the POM itself.
+     * Asks the remote repositories for the newest release version, unless
+     * {@code -Dorganizer.resolveLatest=false} turned that off.
      */
     Optional<String> resolveVersionExternally(PomDocument pom, Coordinate coordinate)
             throws MojoExecutionException {
-        return Optional.empty();
+        if (!resolveLatest) {
+            return Optional.empty();
+        }
+        VersionResolver resolver = versionResolver();
+        if (resolver == null) {
+            return Optional.empty();
+        }
+        if (session != null && session.isOffline()) {
+            throw new MojoExecutionException(
+                    "Cannot look up a version for " + coordinate.toGA()
+                            + " while Maven is offline. Pass -Dversion=<version>, or drop -o.");
+        }
+        Optional<String> latest;
+        try {
+            latest = resolver.latestVersion(coordinate, allowSnapshots);
+        } catch (VersionResolver.VersionResolutionException e) {
+            throw new MojoExecutionException(
+                    e.getMessage() + ". Pass -Dversion=<version> to skip the lookup.", e);
+        }
+        latest.ifPresent(version -> getLog().info(
+                "Resolved the newest " + (allowSnapshots ? "" : "release ") + "version of "
+                        + coordinate.toGA() + " to " + version));
+        return latest;
     }
 
     /** Lets the user pick from the dependencies already declared. */

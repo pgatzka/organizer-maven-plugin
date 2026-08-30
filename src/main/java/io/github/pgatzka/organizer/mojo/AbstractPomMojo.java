@@ -9,11 +9,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.List;
+import io.github.pgatzka.organizer.core.VersionResolver;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.jdom2.Element;
 
 /**
@@ -47,7 +52,17 @@ public abstract class AbstractPomMojo extends AbstractMojo {
     @Parameter(defaultValue = "${session}", readonly = true)
     MavenSession session;
 
+    @Component
+    RepositorySystem repositorySystem;
+
+    @Parameter(defaultValue = "${repositorySystemSession}", readonly = true)
+    RepositorySystemSession repositorySession;
+
+    @Parameter(defaultValue = "${project.remoteProjectRepositories}", readonly = true)
+    List<RemoteRepository> remoteRepositories;
+
     private Prompter prompter;
+    private VersionResolver versionResolver;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -130,6 +145,28 @@ public abstract class AbstractPomMojo extends AbstractMojo {
     /** Test seam: replaces the console prompter with a scripted one. */
     void setPrompter(Prompter prompter) {
         this.prompter = prompter;
+    }
+
+    /**
+     * Looks versions up in the repositories Maven is configured with, falling back to Maven Central
+     * when no project is loaded. Returns {@code null} when the Maven runtime did not supply a
+     * repository system, as it does not in plain unit tests.
+     */
+    VersionResolver versionResolver() {
+        if (versionResolver == null && repositorySystem != null && repositorySession != null) {
+            versionResolver = new VersionResolver(repositorySystem, repositorySession, repositoriesToSearch());
+        }
+        return versionResolver;
+    }
+
+    /** Which repositories {@link #versionResolver()} should search. */
+    List<RemoteRepository> repositoriesToSearch() {
+        return remoteRepositories;
+    }
+
+    /** Test seam: replaces the repository-backed resolver. */
+    void setVersionResolver(VersionResolver versionResolver) {
+        this.versionResolver = versionResolver;
     }
 
     /**
